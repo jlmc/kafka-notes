@@ -237,3 +237,12 @@ Reset the ofset of one consumer group
 kafka-consumer-groups bootstrap-server 127.0.0.1:9092 --group <group-name> --reset-offset --to-earliest --execute --topic <topic-name>
 ```
 
+---
+
+# Configuring Producers and Consumers
+
+### Client Configurations
+
+- There exist a lot of options to:
+  - configure producer: https://kafka.apache.org/documentation/#producerconfigs
+  - configure consumers:  https://kafka.apache.org/documentation/#consumerconfigs
