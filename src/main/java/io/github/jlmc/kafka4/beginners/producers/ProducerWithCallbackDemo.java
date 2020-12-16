@@ -1,9 +1,6 @@
-package io.github.jlmc.kafka4.beginners;
+package io.github.jlmc.kafka4.beginners.producers;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,13 +8,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
-/**
- * By providing a key we guaranty that always a message with the same key is going to the same partition
- * (for the same fixed number of partitions)
- */
-public class ProducerDemoKeys {
+// 2
+public class ProducerWithCallbackDemo {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProducerDemoKeys.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProducerWithCallbackDemo.class);
 
     public static final String FIRST_TOPIC = "FIRST_TOPIC";
     public static final String LOCALHOST_9092 = "localhost:9092";
@@ -38,16 +32,12 @@ public class ProducerDemoKeys {
 
         // 2. create a kafka producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
-
-        for (int i = 0; i < 10; i++) {
         // 3. create a kafka record
-            String value = "hello world " + i;
-            String key = "key." + i;
-            ProducerRecord<String, String> record = new ProducerRecord<>(FIRST_TOPIC, key, value);
-            // 4. send the kafka record to topic in the kafka using the producer
-            Future<RecordMetadata> sent = producer.send(record, ProducerDemoKeys::onCompletion);
-        }
+        ProducerRecord<String, String> record = new ProducerRecord<>(FIRST_TOPIC, "hello world");
 
+
+        // 4. send the kafka record to topic in the kafka using the producer
+        Future<RecordMetadata> sent = producer.send(record, ProducerWithCallbackDemo::onCompletion);
 
         // flush data
         producer.flush();

@@ -1,4 +1,4 @@
-package io.github.jlmc.kafka4.beginners;
+package io.github.jlmc.kafka4.beginners.producers;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
