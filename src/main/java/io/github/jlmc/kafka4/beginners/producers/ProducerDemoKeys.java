@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
+import static io.github.jlmc.kafka4.beginners.KafkaConfigs.*;
+
 /**
  * By providing a key we guaranty that always a message with the same key is going to the same partition
  * (for the same fixed number of partitions)
@@ -18,9 +20,6 @@ import java.util.concurrent.Future;
 public class ProducerDemoKeys {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProducerDemoKeys.class);
-
-    public static final String FIRST_TOPIC = "FIRST_TOPIC";
-    public static final String LOCALHOST_9092 = "localhost:9092";
 
     public static void main(String[] args) {
 
