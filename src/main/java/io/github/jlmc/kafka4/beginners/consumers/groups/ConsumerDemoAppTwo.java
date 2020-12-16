@@ -1,4 +1,4 @@
-package io.github.jlmc.kafka4.beginners.consumers;
+package io.github.jlmc.kafka4.beginners.consumers.groups;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,13 +12,14 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
-import static io.github.jlmc.kafka4.beginners.KafkaConfigs.*;
+import static io.github.jlmc.kafka4.beginners.KafkaConfigs.FIRST_TOPIC;
+import static io.github.jlmc.kafka4.beginners.KafkaConfigs.LOCALHOST_9092;
 
-public class ConsumerDemo {
+public class ConsumerDemoAppTwo {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerDemo.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerDemoAppTwo.class);
 
-    public static final String APP_NAME = "ConsumerDemo";
+    public static final String APP_NAME = "App2";
 
     public static void main(String[] args) {
 
