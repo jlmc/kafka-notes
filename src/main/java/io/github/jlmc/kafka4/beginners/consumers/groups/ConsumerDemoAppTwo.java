@@ -15,6 +15,9 @@ import java.util.Properties;
 import static io.github.jlmc.kafka4.beginners.KafkaConfigs.FIRST_TOPIC;
 import static io.github.jlmc.kafka4.beginners.KafkaConfigs.LOCALHOST_9092;
 
+/**
+ * 2
+ */
 public class ConsumerDemoAppTwo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerDemoAppTwo.class);

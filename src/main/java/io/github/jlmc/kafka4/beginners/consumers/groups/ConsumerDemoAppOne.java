@@ -16,6 +16,8 @@ import static io.github.jlmc.kafka4.beginners.KafkaConfigs.FIRST_TOPIC;
 import static io.github.jlmc.kafka4.beginners.KafkaConfigs.LOCALHOST_9092;
 
 /**
+ * 2
+ *
  * note that if we want to start consume again from the beginning, we have two options.
  *
  * 1. reset the offset

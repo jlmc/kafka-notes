@@ -14,6 +14,7 @@ import java.util.Properties;
 
 import static io.github.jlmc.kafka4.beginners.KafkaConfigs.*;
 
+// 1
 public class ConsumerDemo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerDemo.class);
