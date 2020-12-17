@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -36,6 +37,21 @@ public final class KafkaConsumerService implements Runnable, AutoCloseable {
         this.topic = topic;
         this.chain = chain;
         this.kafkaConsumer = kafkaConsumer;
+    }
+
+    public static KafkaConsumerService newConsumer(String bootstrapServer,
+                                                   String groupId,
+                                                   String topic,
+                                                   Consumer<ConsumerRecord<String, String>> chain,
+                                                   Map<String, String> overrideProperties) {
+
+        Properties properties = ConsumerProperties.with(bootstrapServer, groupId);
+        properties.putAll(overrideProperties);
+
+        KafkaConsumer<String, String > kafkaConsumer = new KafkaConsumer<>(properties);
+
+        return new KafkaConsumerService(kafkaConsumer, topic, chain, new CountDownLatch(1));
+
     }
 
     public static KafkaConsumerService newConsumer(String bootstrapServer,
