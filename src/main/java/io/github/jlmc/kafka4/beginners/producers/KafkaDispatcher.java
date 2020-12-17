@@ -72,7 +72,7 @@ public class KafkaDispatcher<V> implements AutoCloseable {
             return;
         }
 
-        LOGGER.debug("Received a new Metadata: Topic: <{}>  Partition: <{}> Offset: <{}> Timestamp: <{}>",
+        LOGGER.info("Received a new Metadata: Topic: <{}>  Partition: <{}> Offset: <{}> Timestamp: <{}>",
                 recordMetadata.topic(),
                 recordMetadata.partition(),
                 recordMetadata.offset(),

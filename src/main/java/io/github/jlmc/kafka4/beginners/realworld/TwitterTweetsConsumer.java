@@ -32,10 +32,6 @@ public class TwitterTweetsConsumer {
                         TwitterTweetsConsumer::consume,
                         Map.of(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1"));
 
-        //service.run();
-
-        System.out.println("....");
-
         executorService.submit(service);
 
         Runtime.getRuntime()

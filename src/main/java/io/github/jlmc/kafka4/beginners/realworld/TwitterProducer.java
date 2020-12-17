@@ -10,8 +10,10 @@ import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
 import io.github.jlmc.kafka4.beginners.producers.KafkaDispatcher;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -40,11 +42,21 @@ public class TwitterProducer {
         twitterClient.connect();
 
         // create a kafka producer
-        dispacheToKafkaTopic(msgQueue, twitterClient);
+        dispatchToKafkaTopic(msgQueue, twitterClient);
     }
 
-    private void dispacheToKafkaTopic(BlockingQueue<String> msgQueue, Client twitterClient) {
-        try (KafkaDispatcher<String> kafkaDispatcher = KafkaDispatcher.newKafkaDispatcher()) {
+    private void dispatchToKafkaTopic(BlockingQueue<String> msgQueue, Client twitterClient) {
+        Map<String, String> saveProducerProps = Map.of(
+                ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true",
+
+                // not required, just for the people not get confused,
+                ProducerConfig.ACKS_CONFIG, "all"
+                //ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE),
+                //ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5"
+        );
+
+
+        try (KafkaDispatcher<String> kafkaDispatcher = KafkaDispatcher.newKafkaDispatcher(/*saveProducerProps*/)) {
             // on a different thread, or multiple different threads....
             while (!twitterClient.isDone()) {
                 try {
