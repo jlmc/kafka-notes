@@ -1,7 +1,6 @@
-package io.github.jlmc.kafka4.beginners.realworld;
+package io.github.jlmc.kafka4u.twitter;
 
-import io.github.jlmc.kafka4.beginners.KafkaConfigs;
-import io.github.jlmc.kafka4.beginners.consumers.thread.KafkaConsumerService;
+import io.github.jlmc.kafka4u.twitter.consumer.KafkaConsumerService;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;

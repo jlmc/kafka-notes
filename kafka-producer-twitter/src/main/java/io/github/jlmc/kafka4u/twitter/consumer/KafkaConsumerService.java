@@ -1,4 +1,5 @@
-package io.github.jlmc.kafka4.beginners.consumers.thread;
+package io.github.jlmc.kafka4u.twitter.consumer;
+
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -64,10 +65,10 @@ public final class KafkaConsumerService implements Runnable, AutoCloseable {
     }
 
     public static KafkaConsumerService newConsumer(String bootstrapServer,
-                                                    String groupId,
-                                                    String topic,
-                                                    Consumer<ConsumerRecord<String, String>> chain,
-                                                    CountDownLatch latch) {
+                                                   String groupId,
+                                                   String topic,
+                                                   Consumer<ConsumerRecord<String, String>> chain,
+                                                   CountDownLatch latch) {
 
         Properties properties = ConsumerProperties.with(bootstrapServer, groupId);
         KafkaConsumer<String, String > kafkaConsumer = new KafkaConsumer<>(properties);

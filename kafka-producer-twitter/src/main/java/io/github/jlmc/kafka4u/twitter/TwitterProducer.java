@@ -1,4 +1,4 @@
-package io.github.jlmc.kafka4.beginners.realworld;
+package io.github.jlmc.kafka4u.twitter;
 
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
@@ -9,7 +9,7 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
-import io.github.jlmc.kafka4.beginners.producers.KafkaDispatcher;
+import io.github.jlmc.kafka4u.twitter.producer.KafkaDispatcher;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.HashMap;
