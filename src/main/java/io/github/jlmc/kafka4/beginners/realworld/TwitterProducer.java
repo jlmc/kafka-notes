@@ -12,6 +12,7 @@ import com.twitter.hbc.httpclient.auth.OAuth1;
 import io.github.jlmc.kafka4.beginners.producers.KafkaDispatcher;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -21,16 +22,20 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
     public static final String TWITTER_TWEETS = "twitter_tweets";
-    private final String consumerKey = "1z6RTU5M0DRsVAz0vhCoyyp3N";
-    private final String consumerSecret = "pHxb6BuW7bCtUZ0kbUWtQmjly1I6JvSkdEwyCZdBbniYYwn431";
-    private final String token = "4372780893-mm0saAAk3VIwYIFLGdqQXKbxp6pzGgSJBYFnpat";
-    private final String secret = "aOlZKlxVG5QOwKQOYnDAtuSoXmntMoxyI6JWebORoFbur";
+    private final TwitterApiCredentials apiCredentials;
 
-    TwitterProducer() {
+    TwitterProducer(TwitterApiCredentials apiCredentials) {
+        this.apiCredentials = apiCredentials;
     }
 
     public static void main(String[] args) {
-        new TwitterProducer().run();
+
+        TwitterApiCredentials apiCredentials =
+                new TwitterApiCredentials("1z6RTU5M0DRsVAz0vhCoyyp3N",
+                        "pHxb6BuW7bCtUZ0kbUWtQmjly1I6JvSkdEwyCZdBbniYYwn431",
+                        "4372780893-mm0saAAk3VIwYIFLGdqQXKbxp6pzGgSJBYFnpat",
+                        "aOlZKlxVG5QOwKQOYnDAtuSoXmntMoxyI6JWebORoFbur");
+        new TwitterProducer(apiCredentials).run();
     }
 
     public void run() {
@@ -46,17 +51,22 @@ public class TwitterProducer {
     }
 
     private void dispatchToKafkaTopic(BlockingQueue<String> msgQueue, Client twitterClient) {
-        Map<String, String> saveProducerProps = Map.of(
-                ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true",
+        Map<String, String> tuningConfigs = new HashMap<>();
 
-                // not required, just for the people not get confused,
-                ProducerConfig.ACKS_CONFIG, "all"
-                //ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE),
-                //ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5"
-        );
+        // create a safe producer
+        tuningConfigs.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        tuningConfigs.put(ProducerConfig.ACKS_CONFIG, "all");
+        // not required, just for the people not get confused,
+        tuningConfigs.put(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
+        tuningConfigs.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+
+        // high throughput producer (at expense at a bit of latency and cpu usage
+        tuningConfigs.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        tuningConfigs.put(ProducerConfig.LINGER_MS_CONFIG, "20");
+        tuningConfigs.put(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024));  // 32 kb of batch size
 
 
-        try (KafkaDispatcher<String> kafkaDispatcher = KafkaDispatcher.newKafkaDispatcher(/*saveProducerProps*/)) {
+        try (KafkaDispatcher<String> kafkaDispatcher = KafkaDispatcher.newKafkaDispatcher(tuningConfigs)) {
             // on a different thread, or multiple different threads....
             while (!twitterClient.isDone()) {
                 try {
@@ -82,26 +92,32 @@ public class TwitterProducer {
         StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
 
         //List<String> terms = Lists.newArrayList("twitter", "api");
-        List<String> terms = List.of("kafka", "java");
+        List<String> terms = List.of("kafka", "java", "usa", "benfica");
         hosebirdEndpoint.trackTerms(terms);
 
+        //@formatter:off
         // These secrets should be read from a config file
         Authentication hosebirdAuth =
-                new OAuth1(consumerKey,
-                        consumerSecret,
-                        token,
-                        secret);
+                new OAuth1(apiCredentials.consumerKey(),
+                           apiCredentials.consumerSecret(),
+                           apiCredentials.token(),
+                           apiCredentials.secret());
+        //@formatter:on
 
+        ClientBuilder builder =
+                new ClientBuilder()
+                        .name("Hosebird-Client-01")                              // optional: mainly for the logs
+                        .hosts(hosebirdHosts)
+                        .authentication(hosebirdAuth)
+                        .endpoint(hosebirdEndpoint)
+                        .processor(new StringDelimitedProcessor(msgQueue));
 
-        ClientBuilder builder = new ClientBuilder()
-                .name("Hosebird-Client-01")                              // optional: mainly for the logs
-                .hosts(hosebirdHosts)
-                .authentication(hosebirdAuth)
-                .endpoint(hosebirdEndpoint)
-                .processor(new StringDelimitedProcessor(msgQueue));
+        return builder.build();
+    }
 
-        Client hosebirdClient = builder.build();
-
-        return hosebirdClient;
+    public static record TwitterApiCredentials(String consumerKey,
+                                               String consumerSecret,
+                                               String token,
+                                               String secret) {
     }
 }

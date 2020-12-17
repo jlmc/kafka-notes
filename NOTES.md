@@ -80,3 +80,123 @@ producerProps.put("enable.idempotence", true);
 -  kafka >= 0.11
   - enable.idempotence=true (producer level) 
   - min.insync.replicas=2 (broker/topic level)
+
+
+- if I want to have an extremely high confidence that leaders and replicas have my data, I should use
+  - `acks=all, replication factor=3, min.insync.replicas=2`
+---
+
+# Configuring Producers and Consumers
+
+### Client Configurations
+
+- There exist a lot of options to:
+    - configure producer: https://kafka.apache.org/documentation/#producerconfigs
+    - configure consumers:  https://kafka.apache.org/documentation/#consumerconfigs
+
+---
+
+# Real World Exercise
+
+- Real-World Exercise:
+    - Before jumping to the next section for the solution, here are some pointers for some exercises:
+
+- Twitter Producer
+    - The Twitter Producer gets data from Twitter based on some keywords and put them in a Kafka topic of your choice
+    - Twitter Java Client: [https://github.com/twitter/hbc](https://github.com/twitter/hbc)
+    - Twitter API Credentials: [https://developer.twitter.com/](https://developer.twitter.com/)
+
+- ElasticSearch Consumer
+    - The ElasticSearch Consumer gets data from your twitter topic and inserts it into ElasticSearch
+    - ElasticSearch Java
+      Client: [https://www.elastic.co/guide/en/elasticsearch/client/java-rest/6.4/java-rest-high.html](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/6.4/java-rest-high.html)
+
+ElasticSearch setup:
+
+- https://www.elastic.co/guide/en/elasticsearch/reference/current/setup.html
+  OR
+- https://bonsai.io/
+
+---
+
+```
+API key: 
+1z6RTU5M0DRsVAz0vhCoyyp3N
+
+API secret key
+pHxb6BuW7bCtUZ0kbUWtQmjly1I6JvSkdEwyCZdBbniYYwn431
+
+Bearer token
+AAAAAAAAAAAAAAAAAAAAAMzhKgEAAAAAXTOM25kXglBv4%2Bfmlu16TdsqKXc%3DkAMaj4fTbd6vo49VbeCFUlwiDpeCSreURppmhXOzhOiRTbULur
+```
+
+Twitter client dependency
+
+```
+https://github.com/twitter/hbc
+ <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>hbc-core</artifactId> <!-- or hbc-twitter4j -->
+      <version>2.2.0</version> <!-- or whatever the latest version is -->
+ </dependency>
+```
+
+## Message Compression
+
+- Producer usually send data that is text-based, for example with JSON data.
+- In this case, it is very important to apply compression to the producer.
+- Compression is enabled at the producer level and doens't require any configuration change in the broker or in the consumers.
+    - `compression.type` can be `none` (default), `gzip`, `lz4`, `snappy`
+- Compression is more effective the bigger the batch of message being sent to kafka.
+
+- Compression Advantages:
+    1. Much smaller producer request size (compression ratio up to 4x!)
+    2. Faster to transfer data over the network => less latency
+    3. Better throughput
+    4. Better disk utilization in kafka (stored messages on disk are smaller)
+- Compression Disadvantages (very minor)
+    1. Producer must commit some CPU cycles to compression
+    2. Consumer must commit some CPU cycles to decompression
+- Overall
+    1. Consider testing snappy or lz4 optimal speed/compression ratio
+    2. Gzip is going to have the highest compression ratio, but it's not very fast.
+    3. Consider tweaking `linger.ms` and `batch.size` to have bigger batches, and therefore more compression and higher throughput
+    - `linger.ms`: Number of milliseconds a producer is willing to wait before sending a batch out (default 0). That means that the producer should send the data through kafka right away.
+        - By introducing some lag (for example `linger.ms=5`), we increase the chances of messages being sent together in a batch.
+        - So at the expense of introducing a small delay, we can increase throughput, compression and efficiency of our producer.
+    - `batch.size`: Maximum number of bytes that will be included in a batch. The default is 16K
+        - If a batch is full before the end of the linger.ms period, it will be sent to kafka right way
+        - Increasing the batch.size to something like 32Kb or 64Kb can help increasing the compression, throughout, and efficiency of requests.
+        - Any message that is bigger that the batch size will not be batched.
+        - A batch is allocated per partition, so make sure that you don't set it to a number that is tool high, otherwise you will run waste memory.
+        - _Note: You can monitor the average batch size metric using kafka Producer metrics_
+
+
+## Producer Default Partitions and how keys are hashed
+
+- The keys, using a serializer, they are converted into bytes, a serie of zeros and ones. These bytes are going to get hashed. Hashed is basically a big, mathematical formula to basically, transform all these numbers into a final value.
+- By default kafka hashed the keys using the "murmum2" algarithm.
+
+    -  The formula is: `targetPartition = Util.abs(Utils.murmum2(record.key())) % numPartitions;`
+    - **This means that same key will go to the same partition, and adding partitions to a topic will completely alter the formula.**
+
+- Note: It is most likely preferred to not override the behavior of the partitioner but it is possible to do so (partitioner.class)
+
+
+## `Max.block.ms` & `buffer.memory`
+
+- these two settings are called max block millisecond and buffer memory, and they are super advanced, they are usedonly when you run into these exceptions that you really need to look into those.
+
+_- As a beginner level, don't even look at these things, unless to get the exception we're going to visit right now._
+
+- basically the exception happens when the producer produces way faster than the broker can take. And, so, basically the broker can not ingest data fast enough.
+
+- The records are going to be buffered in the producer memory. By default each producer has a buffer memory of 32 megabytes, that is the size of the send buffer.
+    - `buffer.memory=22554432 (32MB) `
+    - The buffer will fill up over time and fill back down when the throughput to the broker increases. If the buffer if full (all 32MB), then the `.send()` method will start to block (won't return right away). Basically, that means that your code won't try to produce more data, it will just wait. That wait is controlled by max block milliseconds configurations:
+    - `max.block.ms=60000` is the time the send method execution will block until throwing an exception. Exceptions are basically thrown when:
+        - The producer has filled up its buffer.
+        - The broker is not accepting any new data.
+        - 60 seconds has elapsed.
+    - If you hit an exception hit that usually means your broker are down or overloaded as they can't respond to requests.
+  
