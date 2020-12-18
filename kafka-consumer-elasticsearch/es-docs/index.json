@@ -1,0 +1,130 @@
+{
+  "mappings" : {
+    "_doc" : {
+      "properties" : {
+        "city" : {
+          "type" : "text"
+        },
+        "closeTime" : {
+          "type" : "date",
+          "format" : "strict_hour_minute"
+        },
+        "day" : {
+          "type" : "date",
+          "format" : "strict_year_month_day"
+        },
+        "dayOfWeek" : {
+          "type" : "integer"
+        },
+        "dependencyCode" : {
+          "type" : "text",
+          "analyzer" : "portuguese"
+        },
+        "end" : {
+          "type" : "date",
+          "format" : "strict_hour_minute"
+        },
+        "exams" : {
+          "type" : "nested",
+          "properties" : {
+            "code" : {
+              "type" : "text"
+            },
+            "executionTime" : {
+              "type" : "integer"
+            },
+            "name" : {
+              "type" : "text",
+              "fields" : {
+                "keyword" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                }
+              }
+            },
+            "nome" : {
+              "type" : "text",
+              "fields" : {
+                "original" : {
+                  "type" : "keyword"
+                }
+              },
+              "analyzer" : "portuguese"
+            },
+            "ranking" : {
+              "type" : "integer"
+            }
+          }
+        },
+        "geographicZoneId" : {
+          "type" : "integer"
+        },
+        "id" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "openTime" : {
+          "type" : "date",
+          "format" : "strict_hour_minute"
+        },
+        "physician" : {
+          "type" : "nested",
+          "properties" : {
+            "code" : {
+              "type" : "text",
+              "analyzer" : "portuguese"
+            },
+            "id" : {
+              "type" : "integer"
+            },
+            "name" : {
+              "type" : "text",
+              "fields" : {
+                "original" : {
+                  "type" : "keyword"
+                }
+              },
+              "analyzer" : "portuguese"
+            }
+          }
+        },
+        "roomId" : {
+          "type" : "integer"
+        },
+        "start" : {
+          "type" : "date",
+          "format" : "strict_hour_minute"
+        },
+        "technical" : {
+          "type" : "nested",
+          "properties" : {
+            "code" : {
+              "type" : "text",
+              "analyzer" : "portuguese"
+            },
+            "id" : {
+              "type" : "integer"
+            },
+            "name" : {
+              "type" : "text",
+              "fields" : {
+                "original" : {
+                  "type" : "keyword"
+                }
+              },
+              "analyzer" : "portuguese"
+            }
+          }
+        },
+        "totalOfMinutes" : {
+          "type" : "long"
+        }
+      }
+    }
+  }
+}

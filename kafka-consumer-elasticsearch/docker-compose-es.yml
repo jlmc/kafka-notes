@@ -1,0 +1,51 @@
+version: '3.8'
+
+## docker-compose up -f docker-compose-es.yml
+## docker-compose up -f docker-compose-es.yml -d
+
+# docker-compose -f docker-compose-es.yml up
+
+services:
+  elasticsearch:
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - discovery.type=single-node
+      - "xpack.security.enabled=false"
+    #      - bootstrap.memory_lock=true
+    #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      #      - ./volumes/elasticsearch/config:/usr/share/elasticsearch/config
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      #- .volumes/elasticsearch/config:/usr/share/elasticsearch/config
+    networks:
+      - es-network
+
+  kibana_web:
+    image: docker.elastic.co/kibana/kibana:7.10.1
+    container_name: kibana_web
+    ports:
+      - 5601:5601
+    environment:
+      - SERVER_NAME=kibana.example.org
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    #  - LOGGING_SILENT=true # Default: false Set the value of this setting to true to suppress all logging output.
+    #  - logging.quiet=true # Default: false Set the value of this setting to true to suppress all logging output other than error messages.
+    #  - KIBANA_DEFAULTAPPID # kibana.defaultAppId
+    #  - XPACK_MONITORING_ENABLED: true   # The setting xpack.monitoring.ui.container.elasticsearch.enabled is not defined in the -oss image.
+    depends_on:
+      - elasticsearch
+    #    volumes:
+    #      - .volumes/kibana:/usr/share/kibana/config
+    networks:
+      - es-network
+
+
+networks:
+  es-network:
+    driver: bridge
