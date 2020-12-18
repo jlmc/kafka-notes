@@ -1,0 +1,76 @@
+## docker-compose up --remove-orphans
+## docker-compose logs -t --tail="all" -f elasticsearch
+version: "3.7"
+
+services:
+
+  postgres:
+    image: postgres:11.4
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=elasticsearch-demo-db
+      - POSTGRES_USER=ara
+      - POSTGRES_PASSWORD=ara
+    ports:
+      - 5432:5432
+    volumes:
+      - .volumes/postgres-db:/var/lib/postgresql/data
+    networks:
+      - elasticsearch-demo-network
+  #    mem_limit: 300m # 300MiB. You can use k for KiB, and g for GiB and b for just bytes. However, the number before it must be an integer. You can’t use values like 2.4m, you would have to use 2400k instead
+  #    mem_reservation: 100m
+  # For docker-compose > 3.X
+  #    resources:
+  #      limits:
+  #        cpus: '0.50'
+  #        memory: 50M
+  #      reservations:
+  #        cpus: '0.25'
+  #        memory: 20M
+
+
+
+  elasticsearch:
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.1
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - discovery.type=single-node
+      - "xpack.security.enabled=false"
+    #      - bootstrap.memory_lock=true
+    #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      #      - ./volumes/elasticsearch/config:/usr/share/elasticsearch/config
+      - .volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      #- .volumes/elasticsearch/config:/usr/share/elasticsearch/config
+    depends_on:
+      - postgres
+    networks:
+      - elasticsearch-demo-network
+
+  kibana_web:
+    image: docker.elastic.co/kibana/kibana:6.8.1
+    container_name: kibana_web
+    ports:
+      - 5601:5601
+    environment:
+      - SERVER_NAME=kibana.example.org
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    #  - LOGGING_SILENT=true # Default: false Set the value of this setting to true to suppress all logging output.
+    #  - logging.quiet=true # Default: false Set the value of this setting to true to suppress all logging output other than error messages.
+    #  - KIBANA_DEFAULTAPPID # kibana.defaultAppId
+    #  - XPACK_MONITORING_ENABLED: true   # The setting xpack.monitoring.ui.container.elasticsearch.enabled is not defined in the -oss image.
+    depends_on:
+      - elasticsearch
+    #    volumes:
+    #      - .volumes/kibana:/usr/share/kibana/config
+    networks:
+      - elasticsearch-demo-network
+
+networks:
+  elasticsearch-demo-network:
+    driver: bridge

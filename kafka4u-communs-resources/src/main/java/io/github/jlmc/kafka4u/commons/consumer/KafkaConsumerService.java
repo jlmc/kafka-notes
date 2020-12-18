@@ -15,6 +15,49 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
+/**
+ * <h2>Multi-threaded Processing</h2>
+ * <p>
+ *
+ * The Kafka consumer is NOT thread-safe. All network I/O happens in the thread of the application making the call. It is the responsibility of the user to ensure that multi-threaded access is properly synchronized. Un-synchronized access will result in ConcurrentModificationException.
+ * The only exception to this rule is wakeup(), which can safely be used from an external thread to interrupt an active operation.
+ * </p>
+ * <p>
+ * In this case, a WakeupException will be thrown from the thread blocking on the operation.
+ * </p>
+ * <br>
+ * This can be used to shutdown the consumer from another thread. The following snippet shows the typical pattern:
+ * <br>
+ * <pre>
+ *    public class KafkaConsumerRunner implements Runnable {
+ *      private final AtomicBoolean closed = new AtomicBoolean(false);
+ *      private final KafkaConsumer consumer;
+ *
+ *      public void run() {
+ *          try {
+ *              consumer.subscribe(Arrays.asList("topic"));
+ *              while (!closed.get()) {
+ *                  ConsumerRecords records = consumer.poll(10000);
+ *                  // Handle new records
+ *              }
+ *          } catch (WakeupException e) {
+ *              // Ignore exception if closing
+ *              if (!closed.get()) throw e;
+ *          } finally {
+ *              consumer.close();
+ *          }
+ *      }
+ *
+ *      // Shutdown hook which can be called from a separate thread
+ *      public void shutdown() {
+ *          closed.set(true);
+ *          consumer.wakeup();
+ *      }
+ *  }
+ * </pre>
+ *
+ * @see <a href="https://docs.confluent.io/3.0.1/clients/javadocs/org/apache/kafka/clients/consumer/KafkaConsumer.html">https://docs.confluent.io/3.0.1/clients/javadocs/org/apache/kafka/clients/consumer/KafkaConsumer.html</a>
+ */
 public final class KafkaConsumerService implements Runnable, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerService.class);
@@ -87,7 +130,7 @@ public final class KafkaConsumerService implements Runnable, AutoCloseable {
             }
         } catch (WakeupException e) {
 
-            LOGGER.error("Error WakeupException the consumer ", e);
+            LOGGER.warn("Error WakeupException the consumer ", e);
 
         } finally {
             this.kafkaConsumer.close();
@@ -118,7 +161,7 @@ public final class KafkaConsumerService implements Runnable, AutoCloseable {
 
     private void consume(ConsumerRecords<String, String> records) {
         for (ConsumerRecord<String, String> record : records) {
-            LOGGER.info("-- Key: <{}> Value: <{}> Partition: <{}> Offset: <{}>",
+            LOGGER.debug("-- Key: <{}> Value: <{}> Partition: <{}> Offset: <{}>",
                     record.key(), record.value(), record.partition(), record.offset());
 
             consume(record);

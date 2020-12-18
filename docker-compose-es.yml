@@ -3,7 +3,7 @@ version: '3.8'
 ## docker-compose up -f docker-compose-es.yml
 ## docker-compose up -f docker-compose-es.yml -d
 
-# docker-compose -f docker-compose-es.yml up
+# docker-compose -f docker-compose-es.yml down
 
 services:
   elasticsearch:
@@ -21,7 +21,7 @@ services:
       - 9300:9300
     volumes:
       #      - ./volumes/elasticsearch/config:/usr/share/elasticsearch/config
-      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./.volume/elasticsearch/data:/usr/share/elasticsearch/data
       #- .volumes/elasticsearch/config:/usr/share/elasticsearch/config
     networks:
       - es-network
@@ -40,8 +40,6 @@ services:
     #  - XPACK_MONITORING_ENABLED: true   # The setting xpack.monitoring.ui.container.elasticsearch.enabled is not defined in the -oss image.
     depends_on:
       - elasticsearch
-    #    volumes:
-    #      - .volumes/kibana:/usr/share/kibana/config
     networks:
       - es-network
 

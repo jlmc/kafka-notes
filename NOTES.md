@@ -199,4 +199,38 @@ _- As a beginner level, don't even look at these things, unless to get the excep
         - The broker is not accepting any new data.
         - 60 seconds has elapsed.
     - If you hit an exception hit that usually means your broker are down or overloaded as they can't respond to requests.
-  
+
+
+## Delivery Semantics in the consumers
+
+ For most applications you should use **At Least Once** processing  
+
+- **At Most Once**
+  - At most once offsets are committed as soon as the message batch is received.
+  - If the processing goes wrong, the message will be lost (it won't be read again).
+    - For example, if the consumer processor have to persist the data in some king of repository, and during the processor any exceptions happens, then the data will be lost, but the kafka record offset has successfully committed because that happens before the processor operations.
+
+- **At Least once**
+  - This default behavior.
+  - Offsets are commit after the message is processed.
+  - if the processing goes wrong, the message will be read again.
+  - This can result in duplicate processing of messages. we should make sure that your processing is **idempotent** (i.e. processing again the message won't impact our system)
+  -
+    
+- **Exactly once**
+  -  can be achieved for kafka 0> kafka workflows using kafka Stream API. For Kafka => Sink workflows, use an idempotent consumer.
+
+
+
+#### implements At Least once
+
+The main question is: how to make our consumer idempotent insuring that we can handler the duplicate processing? 
+
+- The consumer must be idempotent:
+  - We can use Kafka Generic ID
+    ```java
+    ConsumerRecord cr = ...
+    String id = cr.topic() + "_" + cr.partition() + "_" + cr.offset();
+    ```
+    
+  - In a better alternative we can find and use a business id.
