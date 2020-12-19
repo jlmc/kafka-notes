@@ -40,7 +40,7 @@ GET twitter_tweets/_doc/3OOZc3YBY0C1qIqeJaTD
 
 6. To increase total fields limit to 2000, try this
 ```
-PUT test_index/_settings
+PUT twitter_tweets/_settings
 {
   "index.mapping.total_fields.limit": 2000
 }

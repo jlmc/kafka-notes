@@ -287,3 +287,22 @@ There are two most common patterns for committing offset in a consumer applicati
      ```shell
       kafka-consumer-groups --bootstrap-server localhost:9092 --group KafkaConsumerElasticsearchDispatcher --describe
      ``
+     
+
+## Consumer Offset Reset Behaviour
+
+-  The behavior for the consumer is one of the following:
+
+  1. auto.offset.reset=latest
+    - will read from the end of the log 
+  2. auto.offset.reset=earliest
+    - will read from the start of the log
+    
+    ```
+      kafka-consumer-groups --bootstrap-server localhost:9092 --group KafkaConsumerElasticsearchDispatcher --reset-offsets --topic twitter_tweets --to-earliest --execute
+      
+      kafka-consumer-groups --bootstrap-server localhost:9092 --group KafkaConsumerElasticsearchDispatcher --describe
+    ```     
+
+  3. auto.offset.reset=note
+    - will throw exception if no offset is found
