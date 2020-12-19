@@ -1,8 +1,6 @@
 package io.github.jlmc.kafka4u.commons.consumer;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +39,15 @@ public class KafkaService<V> implements AutoCloseable, Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaService.class);
 
     private final AtomicBoolean running = new AtomicBoolean(false);
-
+    private final boolean autoCommit;
     private final String topic;
     private final KafkaConsumer<String, V> kafkaConsumer;
     private final List<ConsumerFunction<V>> listeners = new ArrayList<>();
 
-    private KafkaService(String topic, KafkaConsumer<String, V> kafkaConsumer) {
+    private KafkaService(String topic, KafkaConsumer<String, V> kafkaConsumer, boolean autoCommit) {
         this.topic = topic;
         this.kafkaConsumer = kafkaConsumer;
+        this.autoCommit = autoCommit;
     }
 
     public static <V> KafkaService<V> newKafkaService(String bootstrapServer,
@@ -65,8 +64,10 @@ public class KafkaService<V> implements AutoCloseable, Runnable {
         Properties configs = ConsumerProperties.with(bootstrapServer, groupId);
         configs.putAll(overrideProperties);
 
+        boolean autoCommit = Boolean.parseBoolean(configs.getProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true"));
+
         KafkaConsumer<String, V> kafkaConsumer = new KafkaConsumer<>(configs);
-        return new KafkaService<V>(topic, kafkaConsumer);
+        return new KafkaService<V>(topic, kafkaConsumer, autoCommit);
     }
 
 
@@ -89,7 +90,20 @@ public class KafkaService<V> implements AutoCloseable, Runnable {
                     LOGGER.debug("Found <{}> Records... \n", records.count());
                 }
 
-                consumeRecords(records);
+                try {
+                    consumeRecords(records);
+                } catch (Exception e) {
+
+                    // TODO: 19/12/2020 - think in retry mechanism to process the records offsets that fails
+                    if (!autoCommit) {
+                        
+                        LOGGER.error("Error happens processing records <{}> because is auto commit disable the offset will not be committed", e.getMessage(), e);
+                    } else {
+                        throw e;
+                    }
+                }
+
+
             }
 
         } finally {
@@ -98,7 +112,7 @@ public class KafkaService<V> implements AutoCloseable, Runnable {
     }
 
     private void consumeRecords(ConsumerRecords<String, V> records) {
-        if (listeners.isEmpty()) {
+        if (listeners.isEmpty() || records.isEmpty()) {
             return;
         }
 
@@ -110,6 +124,12 @@ public class KafkaService<V> implements AutoCloseable, Runnable {
             for (ConsumerFunction<V> listener : listeners) {
                 listener.consume(record);
             }
+        }
+
+        if (!autoCommit) {
+            LOGGER.info("Committing the Offsets...");
+            kafkaConsumer.commitSync();
+            LOGGER.info("Offsets have been committed...");
         }
     }
 

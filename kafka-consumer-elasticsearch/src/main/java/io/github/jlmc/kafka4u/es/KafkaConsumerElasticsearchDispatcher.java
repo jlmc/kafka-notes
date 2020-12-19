@@ -36,8 +36,12 @@ public class KafkaConsumerElasticsearchDispatcher implements AutoCloseable {
         // Define the max pull records in the poll method,
         // this will hell in the balancing decreasing commit time
         // this a very common configuration in a very large company, market leaders
-        tuning.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
         // max.poll.records
+        tuning.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
+
+        // disable the default behavior of auto commit offsets
+        // means that you have was developer have the responsibility to perform the commit of the offsets
+        tuning.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         KafkaService<String> kafkaService =
                 KafkaService.newKafkaService(
@@ -58,15 +62,15 @@ public class KafkaConsumerElasticsearchDispatcher implements AutoCloseable {
 
 
     public void consumeRecord(ConsumerRecord<String, String> record) {
-        LOGGER.info("Consuming ## key <{}> partition <{}> offset <{}> timestamp <{}> --> < {} >",
+        LOGGER.info("Consuming ## key <{}> partition <{}> offset <{}> timestamp <{}>, <{}>",
                 record.key(), record.partition(), record.offset(), Instant.ofEpochMilli(record.timestamp()), record.value());
 
-        try {
-            String saveId = elasticSearchIndexRepository.save(record.value());
-            LOGGER.info("Save document In Elasticsearch with success, with the id <{}>", saveId);
-        } catch (Exception e) {
-            LOGGER.error("Ignored error on persist data of the record, this way we are going to lose data!", e);
-        }
+        //try {
+        String saveId = elasticSearchIndexRepository.save(record.value());
+        LOGGER.info("Save document In Elasticsearch with success, with the id <{}>", saveId);
+        //} catch (Exception e) {
+        //    LOGGER.error("Ignored error on persist data of the record, this way we are going to lose data!", e);
+        //}
     }
 
     @Override

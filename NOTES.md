@@ -263,3 +263,27 @@ The main question is: how to make our consumer idempotent insuring that we can h
     - Basically, the consumer performs multiple fetchs in parallel.
     
 - All the previous settings are the defaults, and you should only change it if o really need it and know exactlly what you are doing.
+
+
+## Consumer Offset commits Strategies
+
+Normally we don't have to worry about this setting the default is the perfect behavior for mostly all the situations.
+
+There are two most common patterns for committing offset in a consumer application:
+
+1. `enable.auto.commit = true` & synchronous processing of batches
+  - default behavior
+  - The Pull is only executed after all the previous messages have been processed.
+  - with auto-commit offset will be committed automatically for you at regular interval (`auto.commit.interval.ms=5000` by default) every-time you call .poll()
+
+2. `enable.auto.commit = false` & manual commit of offsets
+    ```
+    LOGGER.info("Committing the Offsets...");
+    kafkaConsumer.commitSync();
+    LOGGER.info("Offsets have been committed...");
+    ```
+   
+   - Now after some execution we can check the state of the consumer group:
+     ```shell
+      kafka-consumer-groups --bootstrap-server localhost:9092 --group KafkaConsumerElasticsearchDispatcher --describe
+     ``
