@@ -232,5 +232,34 @@ The main question is: how to make our consumer idempotent insuring that we can h
     ConsumerRecord cr = ...
     String id = cr.topic() + "_" + cr.partition() + "_" + cr.offset();
     ```
-    
   - In a better alternative we can find and use a business id.
+
+
+
+## Consumer Pool Behavior
+
+- kafka consumer have a poll model (means that basically the consumers will ask data from kafka), while many other messaging bus in enterprises have a push model (means that broker server send the data to the consumers, while the consumer just await).
+
+- The kafka behavior allows consumers to control where in the log they want to consume, how fast, and gives them the ability to replay events.
+
+- The kafka behavior can be controlled in many different ways:
+
+  1. `Fetch.min.bytes` (default 1)
+    - define how many bytes in minimum you want.
+    - This allows to  control how much data you want to pull at least on each poll request.
+    - CONTRA: More latency
+    
+  2. `Max.poll.records` (default 500)
+    - Control how many records to receive per poll request
+    - Increase if your messages are very small and have a lot of available RAM
+    - Good to monitor how many records are polled per request
+    
+  3. `Max.partitions.fetch.bytes` (default 1MB)
+    - Maximum data returned by the broker per partition
+    - For Example: If you read 100 partions, you'will need a lot of memory (RAM), because you need to allocate a lotes of data in RAM.
+
+  3. `Fetch.max.bytes` (default 500MB)
+    - Maximum data returned from each fetch request (covers multiple partitions)
+    - Basically, the consumer performs multiple fetchs in parallel.
+    
+- All the previous settings are the defaults, and you should only change it if o really need it and know exactlly what you are doing.

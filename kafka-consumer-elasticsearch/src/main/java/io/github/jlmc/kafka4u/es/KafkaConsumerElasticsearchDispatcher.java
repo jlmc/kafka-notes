@@ -37,12 +37,14 @@ public class KafkaConsumerElasticsearchDispatcher implements AutoCloseable {
         // this will hell in the balancing decreasing commit time
         // this a very common configuration in a very large company, market leaders
         tuning.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
+        // max.poll.records
 
         KafkaService<String> kafkaService =
                 KafkaService.newKafkaService(
                         "localhost:9092",
                         "twitter_tweets",
-                        KafkaConsumerElasticsearchDispatcher.class.getSimpleName());
+                        KafkaConsumerElasticsearchDispatcher.class.getSimpleName(),
+                        tuning);
 
         try (consumer; kafkaService) {
             kafkaService.addListener(consumer::consumeRecord);
