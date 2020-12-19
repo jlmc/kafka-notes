@@ -2,6 +2,7 @@ package io.github.jlmc.kafka4u.es;
 
 import io.github.jlmc.kafka4u.commons.consumer.KafkaService;
 import io.github.jlmc.kafka4u.es.es.ElasticSearchIndexRepository;
+import io.github.jlmc.kafka4u.es.es.ElasticsearchDocument;
 import io.github.jlmc.kafka4u.es.es.RestHighLevelClientFactory;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -66,8 +67,8 @@ public class KafkaConsumerElasticsearchDispatcher implements AutoCloseable {
                 record.key(), record.partition(), record.offset(), Instant.ofEpochMilli(record.timestamp()), record.value());
 
         //try {
-        String saveId = elasticSearchIndexRepository.save(record.value());
-        LOGGER.info("Save document In Elasticsearch with success, with the id <{}>", saveId);
+        ElasticsearchDocument document = elasticSearchIndexRepository.save(record.value());
+        LOGGER.info("Save document In Elasticsearch with success, with the id <{}>", document.id());
         //} catch (Exception e) {
         //    LOGGER.error("Ignored error on persist data of the record, this way we are going to lose data!", e);
         //}
