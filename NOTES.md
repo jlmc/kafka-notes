@@ -429,3 +429,51 @@ public class Application {
     <version>2.6.0</version>
 </dependency>
 ```
+
+---
+# Kafka Schema Registry
+
+- kafka take bytes as an input and publishes them.
+- No data verification.
+
+- Questions:
+  - what if the producer sends bad data?
+  - what if a field gets renamed?
+  - what if the data format changes from one day to another?
+
+- Answer:
+  - The Consumers breaks!!!
+
+- To solve those problems, we need have a Schema Registry.
+
+- Thankfully, there are two ways we could do this:
+
+  - The Schema registry has to be a separate components
+  - Producers and Consumers need to be able to  talk to it
+  - The Schema Registry must be able to reject bad data
+    - It needs to support schemas
+    - It needs to support evolution
+    - It needs to be lightweight
+  - Thankfully all these things exists already and Confluent, the creators of kafka have created something called the **confluent schema registry.**
+    - And they choice **`Apache Avro`** as the data format 
+    
+
+  ![Schema-Registry](docs/Schema-Registry-diagram.jpg)
+
+1. We have Kafka and the schema registry.
+2. Our producer will send Avro content to Kafka, and he will send the schema to the schema registry.
+3. Finally, Our consumers will get the schema from the schema registry, and read Avro content.
+
+#### Gotchas
+
+- Utilizing a schema registry has a lot of benefits
+- But it implies you need to
+  - Set it up Well
+  - Make sure it's highly available
+  - Partiallly change the producer and consumer code
+- Apache Avro as a format is awesome  but has a learning curve
+- The Schema registry is free and open sourced, created by Confluent.
+- As It takes time to setup.
+
+TODO: need to example how to setup the Schema registry.
+
