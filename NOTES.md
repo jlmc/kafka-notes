@@ -306,3 +306,126 @@ There are two most common patterns for committing offset in a consumer applicati
 
   3. auto.offset.reset=note
     - will throw exception if no offset is found
+
+
+# Kafka Connect
+
+- Do you feel you are not the first person in the word to write a way to get data out of twitter?
+- Do you feel yoy are not the first person in the word to send data from kafka to PostgresSQL /  Elastisearch / MongoDb?
+- Additionally, the bugs you will have, won't some have fixed them already? 
+
+- **Kafka connect is all about code & connectors re-use!**
+
+- [https://www.confluent.io/hub](https://www.confluent.io/hub)
+- [https://docs.confluent.io/home/connect/kafka_connectors.html](https://docs.confluent.io/home/connect/kafka_connectors.html)
+- [Kafka connector documentation](https://docs.confluent.io/cloud/current/connectors/index.html)
+
+---
+# Kafka Stream API
+
+Imagine the following Scenario.
+
+>- You want to do the following from the one specific topic:
+>  1. filter only the records that have some predicate.
+>  2. Count the number of records for some predicate.
+>- Or combine the two to get trending topics and hashtags in real time!
+
+- With Kafka Producer and Consumer, you can achieve that, but it's very low level and not developer friendly. This is why kafka Streams came in.
+
+- Kafka Streams is Java Library, that allows easy data processing and transformations within Kafka.
+
+- The idea is that kafka stream is a standard Java application, there is no cluster to run it on. You don't need to create a separate architecture for it.
+
+  - Standard Java Application
+  - No need to create a separate cluster
+  - Highly scalable, elastic and fault tolerant
+  - Exactly Once Capabilities
+  - One record at a time processing (no batching)
+  - Works for any application size
+    
+- It is a serious contender to other processing frameworks such as Apache Spark, Flink, or NiFi.
+
+
+- Our problem is the following:
+ 1. We basically want to chain a Consumer with a Producer.
+
+Tweets_Topic --> Consumer --> Application Logic --> Producer --> Filtered_Topic
+
+- We can implement the flow as follows:
+
+```java
+import com.google.gson.JsonParser;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStream;
+
+import java.util.Properties;
+
+/**
+ * Stream Filter Tweets
+ *
+ * <pre>
+ *     kafka-topics --zookeeper zoo1:2181 --topic twitter_tweets --create --partitions 4 --replication-factor 1
+ *     kafka-topics --zookeeper zoo1:2181 --topic important_tweets --create --partitions 3 --replication-factor 1
+ * </pre>
+ */
+public class Application {
+
+    private static final JsonParser jsonParser = new JsonParser();
+
+    public static void main(String[] args) {
+        //
+        // Create properties
+        Properties properties = new Properties();
+        properties.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        /* the consumer group using stream is called the application */
+        properties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "demo-kafka-streams");
+        /* define the serializers */
+        properties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class.getName());
+        properties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.StringSerde.class.getName());
+
+
+        //
+        // Create a topology
+        StreamsBuilder streamsBuilder = new StreamsBuilder();
+
+        KStream<String, String> inputTopic = streamsBuilder.stream("twitter_tweets");
+        KStream<String, String> filteredStream = inputTopic.filter((k, jsonText) -> extractUserFollowersInTweet(jsonText) > 10_000);
+        filteredStream.to("important_tweets");
+
+        //
+        // build the topology
+        KafkaStreams kafkaStreams = new KafkaStreams(streamsBuilder.build(), properties);
+
+        //
+        // start out stream application
+        kafkaStreams.start();
+    }
+
+    private static int extractUserFollowersInTweet(String tweetJson) {
+        try {
+        
+            // using gson
+            return JsonParser.parseString(tweetJson)
+                    .getAsJsonObject()
+                    .get("user")
+                    .getAsJsonObject()
+                    .get("followers_count")
+                    .getAsInt();
+
+        } catch (NullPointerException e) {
+            return 0;
+        }
+    }
+}
+```
+
+```xml
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-streams</artifactId>
+    <version>2.6.0</version>
+</dependency>
+```
