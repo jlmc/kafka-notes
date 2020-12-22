@@ -552,3 +552,69 @@ TODO: need to example how to setup the Schema registry.
 - ensure that your log contains at least the last known value for a specific key within a partition.
 - very usefull if we just require a SNAPSHOT instead of full history (such as for a data table in a database). The idea is that we wanna keep in kafka only the latest update for a key in our log. 
 - Means that we basically want to keep just the most recent information.
+
+
+
+--- 
+# Start Kafka in different way
+
+### Confluent CLI
+
+### Docker
+
+[see the github project](https://github.com/simplesteph/kafka-stack-docker-compose)
+
+
+### IN A SMALL MACHINE
+
+
+1. download kafka 
+```
+wget [kafka binaries url]
+```
+
+2. extract 
+```
+tar -xvf kafka.x.y.z.tgz
+```
+3. install kafka 
+```
+sudo yum install java-18.0-openjdk
+```
+4. because we may/if have a small machine
+```
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M" 
+```
+5. start zookeeper
+```
+zookeeper-server-start-sh -deamon config/zookeeper.properties
+```
+6. edit server.properties file
+```
+advertised.listerners=PLAINTEXT://[PUBLIC IP]:9092
+```
+7. start kafka
+```
+kafka-server-start.sh config/server.properties
+```
+
+8.testing
+  1. create a producer
+   ```
+   kafka-console-producer --bootstrap-server [public iP]:9092 --topic mytopic
+   kafka-console-producer --broker-list [public iP]:9092 --topic mytopic
+   ```
+  2. create a consumer
+   ```
+   kafka-console-consumer --bootstrap-server [public iP]:9092 --topic mytopic --from-beginnning
+   ```
+---
+# What next 
+
+- kafka connect 
+- kafka stream
+- Confluent schema registry
+
+- kafka setup 
+- kafka Monitoring
+- kafka security
