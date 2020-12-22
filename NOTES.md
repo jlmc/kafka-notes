@@ -514,4 +514,41 @@ TODO: need to example how to setup the Schema registry.
      
 
 - A broker should not hold more than 2_000 to 4_000 partition (across all topics of that broker).
-- Additionally, a kafka cluster should have a maximum of 20_000 parions across all brokers.
+- Additionally, a kafka cluster should have a maximum of 20_000 partions across all brokers.
+
+
+---
+
+# Log Cleanup Policies
+
+- Most Kafka clusters make data expire, acording to a policy. That concept of making data expire is called Log-Cleanup:
+- There are More than one Policy:
+
+1. Policy 1: **`log.cleanup.policy=delete`** (kafka default for all user topics)
+  - The data is delete based on its age (default is one week)
+  - The data is also deleted based on max size of log (default is -1 == infinite)
+
+2. Policy 2: **`log.cleanup.policy=compact`** (kafka default for topic __consumer_offsets)
+  - If we run the following command:
+    ```
+    kafka-topics --zookeeper 127.0.0.1 --decribe __consumer_offsets
+    ```
+  - we can see that in the output there is one configuration called log.cleanup.policy and its have the value compact
+    - Delete based on key of the messages
+    - Delete old duplicate keys **after** the active segmente is commited.
+    
+
+### Log Cleanup Policy: Delete
+
+- the first relevant configuration is `log.retention.hours`, it means the number of hours thar the data should be keeped, 168 hours by default (equivalent to one week).
+  - keep in mind:
+    - if we put one Higher number, means we will use more disk space, but we will have more data.
+    - If we put one lower number, means we will have less data retained, and that can be a problem if your consumers are down for too long and when they came back up, they can miss data.
+    
+- the second relevant configuration `log.retention.bytes`, it means the Max size in Bytes for each partition (default is -1 that means infinite) but you may want to for example keep the size of the log under a threshold.
+
+### Log Cleanup Policy: Compact
+
+- ensure that your log contains at least the last known value for a specific key within a partition.
+- very usefull if we just require a SNAPSHOT instead of full history (such as for a data table in a database). The idea is that we wanna keep in kafka only the latest update for a key in our log. 
+- Means that we basically want to keep just the most recent information.
