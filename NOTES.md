@@ -477,3 +477,41 @@ public class Application {
 
 TODO: need to example how to setup the Schema registry.
 
+
+
+# Partitions Count, Replication Factor
+
+- Each partition can handle a throughput of new few MB/s
+- More partitions implies:
+  - Better parallelism
+  - Ability to run more consumers in a group to scale
+    - I.E. If we have 3 partitions we are limited to have maximum of 3 consumers in a group. A 4 consumer would be just be inactive.
+  - Ability to leverage more brokers if you have a large cluster.
+    - More partitions you have, the more brokers you will utilize.
+    - So, if you have a large cluster of 20 brokers and you create a topic with two partitions, then you only have two brokers working for you.
+  - BUT more partitions you have more elections that zookeeper will perform for you.
+    
+
+### Guidelines:
+
+**- Partitions per topic = MILLION DOLLAR QUESTION**
+  1. If You have a small cluster (less that 6 brokers) => Nº partitions should be 2X the number of brokers.
+    -  nº broker < 6  then 2 * nº brokers
+     
+  2. If you have a Big cluster (> 12 brokers) => Nº partitions should be 1x the nº brokers
+    - nº broker > 12 then 1 * nº broker 
+
+**- Replication Factor**
+  1. Should be at least 2, usually 3, maximum 4
+  2. The higher the replication factor (N)
+    - Better resilience of your system (N-1 brokers can fail)
+    - BUT more replication (higher latency if acks = all)
+    - BUT more disk space on you system (50% more if RF is 3 instead of 2)
+  
+  3. We should start with 3 (you must have at least 3 brokers for that)
+  4. If replication performance is an issue, we should get a better instead of less RF (better machines).
+  5 Never set it to 1 in production
+     
+
+- A broker should not hold more than 2_000 to 4_000 partition (across all topics of that broker).
+- Additionally, a kafka cluster should have a maximum of 20_000 parions across all brokers.
