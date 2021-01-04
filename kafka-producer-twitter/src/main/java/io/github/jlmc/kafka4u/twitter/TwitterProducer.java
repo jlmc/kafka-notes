@@ -29,12 +29,20 @@ public class TwitterProducer {
     }
 
     public static void main(String[] args) {
+        if (args.length != 4) {
+            throw new IllegalArgumentException("Missing the twitter credentials in the order: <consumerKey> <consumerSecret> <token> <secret>");
+        }
+
+        String consumerKey = args[0];
+        String consumerSecret = args[1];
+        String token = args[2];
+        String secret = args[3];
 
         TwitterApiCredentials apiCredentials =
-                new TwitterApiCredentials("1z6RTU5M0DRsVAz0vhCoyyp3N",
-                        "pHxb6BuW7bCtUZ0kbUWtQmjly1I6JvSkdEwyCZdBbniYYwn431",
-                        "4372780893-mm0saAAk3VIwYIFLGdqQXKbxp6pzGgSJBYFnpat",
-                        "aOlZKlxVG5QOwKQOYnDAtuSoXmntMoxyI6JWebORoFbur");
+                new TwitterApiCredentials(consumerKey,
+                        consumerSecret,
+                        token,
+                        secret);
         new TwitterProducer(apiCredentials).run();
     }
 

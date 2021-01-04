@@ -119,16 +119,6 @@ ElasticSearch setup:
 
 ---
 
-```
-API key: 
-1z6RTU5M0DRsVAz0vhCoyyp3N
-
-API secret key
-pHxb6BuW7bCtUZ0kbUWtQmjly1I6JvSkdEwyCZdBbniYYwn431
-
-Bearer token
-AAAAAAAAAAAAAAAAAAAAAMzhKgEAAAAAXTOM25kXglBv4%2Bfmlu16TdsqKXc%3DkAMaj4fTbd6vo49VbeCFUlwiDpeCSreURppmhXOzhOiRTbULur
-```
 
 Twitter client dependency
 
