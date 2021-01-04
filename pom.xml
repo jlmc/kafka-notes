@@ -5,16 +5,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.jlmc</groupId>
-    <artifactId>kafka-4-beginners</artifactId>
+    <artifactId>kafka-notes</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <modules>
         <module>kafka-basics</module>
         <module>kafka-producer-twitter</module>
         <module>kafka-consumer-elasticsearch</module>
-        <module>kafka4u-communs-resources</module>
+        <module>kafka4u-commons-resources</module>
         <module>kafka-stream-api-filter-example</module>
+        <module>examples/kafka-examples-pom</module>
     </modules>
 
     <build>
